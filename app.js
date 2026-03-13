@@ -909,6 +909,20 @@
   });
 
   // ============================================
+  // Manual Modal
+  // ============================================
+
+  const manualModal = $('manualModal');
+  const manualBtn = $('manualBtn');
+  const manualClose = $('manualClose');
+
+  manualBtn.addEventListener('click', () => manualModal.classList.add('active'));
+  manualClose.addEventListener('click', () => manualModal.classList.remove('active'));
+  manualModal.addEventListener('click', (e) => {
+    if (e.target === manualModal) manualModal.classList.remove('active');
+  });
+
+  // ============================================
   // Theme Toggle (Dark / Light)
   // ============================================
 

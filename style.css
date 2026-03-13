@@ -130,6 +130,18 @@
 /* Theme Toggle */
 .btn-icon { font-size: 1.1rem; padding: 6px 8px; }
 
+/* Manual Modal */
+.manual-modal { max-width: 680px; }
+.manual-body { max-height: 70vh; overflow-y: auto; padding: 24px !important; }
+.manual-section { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.manual-section:last-child { border-bottom: none; margin-bottom: 0; }
+.manual-section h3 { font-size: 1.05rem; margin-bottom: 10px; color: var(--text-primary); }
+.manual-section p { margin-bottom: 8px; color: var(--text-secondary); line-height: 1.7; }
+.manual-section ul, .manual-section ol { padding-left: 20px; margin-bottom: 8px; color: var(--text-secondary); line-height: 1.8; }
+.manual-code { background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 12px 16px; margin: 10px 0; overflow-x: auto; }
+.manual-code p { margin-bottom: 6px; }
+.manual-code code { font-family: 'Consolas', 'Monaco', monospace; font-size: 0.82rem; color: var(--accent); line-height: 1.6; }
+
 html {
   font-size: 14px;
   scroll-behavior: smooth;
