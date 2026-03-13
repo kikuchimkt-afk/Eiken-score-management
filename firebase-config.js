@@ -15,8 +15,9 @@ const firebaseConfig = {
 // アクセスを許可するメールアドレスのリスト
 // ここに登録されたGoogleアカウントのみデータにアクセスできます
 const ALLOWED_EMAILS = [
-  // "example@gmail.com",
+  "kikuchi.mkt@gmail.com",
+  "aizumiecc@gmail.com",
+  "eccaizumi@gmail.com",
 ];
 
-// 空の場合はすべての認証済みユーザーがアクセス可能
-// セキュリティを高めるには、管理者のメールアドレスを追加してください
+// セキュリティを高めるには、Firestoreルールにも同じメールアドレスを設定してください
