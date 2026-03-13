@@ -46,6 +46,7 @@
           </div>
         </div>
         <div class="header-actions">
+          <button class="btn btn-ghost btn-icon" id="themeToggle" title="テーマ切替">🌙</button>
           <span class="user-info" id="userInfo"></span>
           <button class="btn btn-ghost" id="exportBtn" title="CSVエクスポート">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -95,6 +96,7 @@
             <span class="stat-value" id="statTotal">0</span>
             <span class="stat-label">総受験件数</span>
           </div>
+          <button class="stat-help-btn" data-help="total" title="説明を見る">ℹ️</button>
         </div>
         <div class="stat-card">
           <div class="stat-icon stat-icon-pass">🎉</div>
@@ -102,6 +104,7 @@
             <span class="stat-value" id="statPassRate">0%</span>
             <span class="stat-label">一次合格率</span>
           </div>
+          <button class="stat-help-btn" data-help="pass" title="説明を見る">ℹ️</button>
         </div>
         <div class="stat-card">
           <div class="stat-icon stat-icon-overall">🏆</div>
@@ -109,6 +112,7 @@
             <span class="stat-value" id="statOverallPass">0%</span>
             <span class="stat-label">最終合格率</span>
           </div>
+          <button class="stat-help-btn" data-help="overall" title="説明を見る">ℹ️</button>
         </div>
         <div class="stat-card">
           <div class="stat-icon stat-icon-students">🎓</div>
@@ -116,9 +120,21 @@
             <span class="stat-value" id="statStudents">0</span>
             <span class="stat-label">受験者数（実人数）</span>
           </div>
+          <button class="stat-help-btn" data-help="students" title="説明を見る">ℹ️</button>
         </div>
       </div>
     </section>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="helpModal">
+      <div class="modal" style="max-width:480px;">
+        <div class="modal-header">
+          <h2 id="helpModalTitle">説明</h2>
+          <button class="modal-close" id="helpModalClose">✕</button>
+        </div>
+        <div class="modal-body" id="helpModalBody" style="font-size:0.95rem;line-height:1.8;"></div>
+      </div>
+    </div>
 
     <!-- Filters -->
     <section class="filter-section">

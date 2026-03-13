@@ -384,8 +384,50 @@
   // Detail Modal
   // ============================================
 
+  let currentDetailRecord = null;
+
   function showDetail(d) {
-    modalTitle.textContent = d.name + '（' + d.grade + ' ' + d.session + '）';
+    currentDetailRecord = d;
+    modalTitle.innerHTML = '<span id="modalNameDisplay">' + (d.name || '—') + '</span>' +
+      ' <button class="btn btn-sm btn-ghost" id="editNameBtn" title="名前を編集">✏️</button>' +
+      '<span style="color:var(--text-muted);font-size:0.85rem;margin-left:8px">（' + d.grade + ' ' + d.session + '）</span>';
+
+    // Edit name handler
+    setTimeout(() => {
+      const editBtn = document.getElementById('editNameBtn');
+      const nameDisplay = document.getElementById('modalNameDisplay');
+      if (editBtn) {
+        editBtn.addEventListener('click', () => {
+          nameDisplay.innerHTML = '<input type="text" id="editNameInput" value="' + (d.name || '') + '" style="background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:4px 8px;font-family:var(--font-sans);font-size:1rem;width:200px;">' +
+            ' <button class="btn btn-sm btn-primary" id="saveNameBtn">保存</button>' +
+            ' <button class="btn btn-sm btn-ghost" id="cancelNameBtn">取消</button>';
+          const input = document.getElementById('editNameInput');
+          input.focus();
+          input.select();
+
+          document.getElementById('saveNameBtn').addEventListener('click', async () => {
+            const newName = input.value.trim();
+            if (!newName) return;
+            try {
+              await db.collection(COLLECTION).doc(d.id).update({ name: newName });
+              d.name = newName;
+              // Update allData too
+              const idx = allData.findIndex((r) => r.id === d.id);
+              if (idx >= 0) allData[idx].name = newName;
+              showToast('名前を更新しました', 'success');
+              applyFilters();
+              showDetail(d); // refresh modal
+            } catch (err) {
+              showToast('更新エラー: ' + err.message, 'error');
+            }
+          });
+
+          document.getElementById('cancelNameBtn').addEventListener('click', () => {
+            showDetail(d); // reset modal
+          });
+        });
+      }
+    }, 0);
 
     const section = (title, rows) => {
       const rowsHtml = rows
@@ -645,6 +687,9 @@
 
   function computeDerived(r) {
     const g = r.grade || '';
+    const year = Number(r.year) || 0;
+    // 2024年度第1回から一部の級で設問数が変更
+    const isNewFormat = year >= 2024;
 
     // readingTotal
     const rqs = [r.readingQ1, r.readingQ2, r.readingQ3, r.readingQ4].filter((v) => typeof v === 'number');
@@ -652,11 +697,17 @@
       r.readingTotal = rqs.reduce((a, b) => a + b, 0);
     }
 
-    // readingRate
+    // readingRate — 分母は級と年度で変わる
     if (typeof r.readingTotal === 'number') {
-      const denoms = { '5級': 25, '4級': 35, '3級': 30, '準2級': 29, '準2級+': 29, '2級': 31 };
-      const d = denoms[g] || 30;
-      r.readingRate = Math.round((r.readingTotal / d) * 10000) / 10000;
+      let denom;
+      if (isNewFormat) {
+        // 2024年度〜 新形式
+        denom = { '5級': 25, '4級': 35, '3級': 15, '準2級': 29, '準2級+': 29, '2級': 31 }[g] || 30;
+      } else {
+        // 〜2023年度 旧形式
+        denom = { '5級': 25, '4級': 35, '3級': 30, '準2級': 37, '2級': 38 }[g] || 30;
+      }
+      r.readingRate = Math.round((r.readingTotal / denom) * 10000) / 10000;
     }
 
     // listeningTotal
@@ -665,10 +716,15 @@
       r.listeningTotal = lqs.reduce((a, b) => a + b, 0);
     }
 
-    // listeningRate
+    // listeningRate — 分母は級と年度で変わる
     if (typeof r.listeningTotal === 'number') {
-      const d = g === '5級' ? 25 : 30;
-      r.listeningRate = Math.round((r.listeningTotal / d) * 10000) / 10000;
+      let denom;
+      if (isNewFormat) {
+        denom = { '5級': 25, '4級': 30, '3級': 30, '準2級': 29, '準2級+': 29, '2級': 29 }[g] || 30;
+      } else {
+        denom = { '5級': 25, '4級': 30, '3級': 30, '準2級': 30, '2級': 30 }[g] || 30;
+      }
+      r.listeningRate = Math.round((r.listeningTotal / denom) * 10000) / 10000;
     }
 
     // writingScore
@@ -804,6 +860,77 @@
   document.addEventListener('drop', (e) => {
     e.preventDefault();
     csvDropZone.classList.remove('drag-over');
+  });
+
+  // ============================================
+  // Help Modal for Stats
+  // ============================================
+
+  const helpTexts = {
+    total: {
+      title: '📊 総受験件数',
+      body: '現在表示されているデータの<strong>受験記録の総数</strong>です。<br><br>1人の生徒が複数回受験している場合、それぞれの受験を1件としてカウントします。<br><br>フィルタを適用すると、フィルタ条件に合致するデータのみが対象になります。'
+    },
+    pass: {
+      title: '🎉 一次合格率',
+      body: '<strong>一次試験の合格率</strong>です。<br><br>計算方法：一次合格者数 ÷ 一次受験者数 × 100<br><br>「一次免除」の受験者は分母から除外されています。フィルタ適用時はフィルタ後のデータが対象です。'
+    },
+    overall: {
+      title: '🏆 最終合格率',
+      body: '<strong>最終的な合格率</strong>（一次＋二次の総合）です。<br><br>計算方法：総合合格者数 ÷（総合合格者数＋総合不合格者数）× 100<br><br>二次未受験や結果未確定のデータは分母から除外されています。'
+    },
+    students: {
+      title: '🎓 受験者数（実人数）',
+      body: '<strong>ユニークな受験者の人数</strong>です。<br><br>同じ氏名の生徒が複数回受験していても1人としてカウントします。<br><br>※ 氏名が完全一致する場合のみ同一人物と判定します。'
+    }
+  };
+
+  const helpModal = $('helpModal');
+  const helpModalTitle = $('helpModalTitle');
+  const helpModalBody = $('helpModalBody');
+  const helpModalClose = $('helpModalClose');
+
+  document.querySelectorAll('.stat-help-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const key = btn.dataset.help;
+      const info = helpTexts[key];
+      if (info) {
+        helpModalTitle.textContent = info.title;
+        helpModalBody.innerHTML = info.body;
+        helpModal.classList.add('active');
+      }
+    });
+  });
+
+  helpModalClose.addEventListener('click', () => helpModal.classList.remove('active'));
+  helpModal.addEventListener('click', (e) => {
+    if (e.target === helpModal) helpModal.classList.remove('active');
+  });
+
+  // ============================================
+  // Theme Toggle (Dark / Light)
+  // ============================================
+
+  const themeToggle = $('themeToggle');
+  const savedTheme = localStorage.getItem('eiken-theme') || 'dark';
+
+  function applyTheme(theme) {
+    if (theme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      themeToggle.textContent = '☀️';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      themeToggle.textContent = '🌙';
+    }
+    localStorage.setItem('eiken-theme', theme);
+  }
+
+  applyTheme(savedTheme);
+
+  themeToggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'light' ? 'dark' : 'light');
   });
 
 })();

@@ -32,7 +32,7 @@
 
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.4);
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -48,9 +48,53 @@
   padding: 0;
 }
 
+/* Light Mode */
+[data-theme="light"] {
+  --bg-primary: #f0f2f5;
+  --bg-secondary: #e4e6eb;
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+  --border: #d1d5db;
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a6a;
+  --text-muted: #8a8aa0;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-glow: rgba(99, 102, 241, 0.1);
+  --pass: #16a34a;
+  --pass-bg: rgba(22, 163, 74, 0.08);
+  --fail: #dc2626;
+  --fail-bg: rgba(220, 38, 38, 0.08);
+  --exempt: #d97706;
+  --exempt-bg: rgba(217, 119, 6, 0.08);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Stat Help Button */
+.stat-help-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+  padding: 2px;
+}
+.stat-help-btn:hover { opacity: 1; }
+.stat-card { position: relative; }
+
+/* Theme Toggle */
+.btn-icon { font-size: 1.1rem; padding: 6px 8px; }
+
 html {
   font-size: 14px;
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -185,9 +229,10 @@ body {
    ======================================== */
 
 .stats-section {
-  max-width: 1440px;
+  max-width: min(1440px, 100vw);
   margin: 0 auto;
   padding: 24px 24px 0;
+  box-sizing: border-box;
 }
 
 .stats-grid {
@@ -252,9 +297,10 @@ body {
    ======================================== */
 
 .filter-section {
-  max-width: 1440px;
+  max-width: min(1440px, 100vw);
   margin: 0 auto;
   padding: 20px 24px 0;
+  box-sizing: border-box;
 }
 
 .filter-bar {
@@ -367,9 +413,10 @@ body {
    ======================================== */
 
 .table-section {
-  max-width: 1440px;
+  max-width: min(1440px, 100vw);
   margin: 0 auto;
   padding: 12px 24px 40px;
+  box-sizing: border-box;
 }
 
 .table-wrapper {
@@ -717,6 +764,13 @@ body {
   color: var(--text-primary);
   background: var(--bg-secondary);
 }
+
+.btn-sm { font-size: 0.8rem; padding: 4px 12px; border-radius: var(--radius-sm); cursor: pointer; border: none; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--bg-secondary); }
+#editNameBtn { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 2px 6px; vertical-align: middle; }
 
 .modal-body {
   padding: 24px;
