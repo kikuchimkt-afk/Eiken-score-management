@@ -107,9 +107,12 @@
   border-bottom-color: #d1d5db;
 }
 
-[data-theme="light"] .grade-badge {
-  color: #fff;
-}
+[data-theme="light"] .grade-2 { background: #ef4444; color: #fff; border-color: #ef4444; }
+[data-theme="light"] .grade-p2p { background: #f97316; color: #fff; border-color: #f97316; }
+[data-theme="light"] .grade-p2 { background: #eab308; color: #fff; border-color: #eab308; }
+[data-theme="light"] .grade-3 { background: #22c55e; color: #fff; border-color: #22c55e; }
+[data-theme="light"] .grade-4 { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+[data-theme="light"] .grade-5 { background: #a855f7; color: #fff; border-color: #a855f7; }
 
 /* Stat Help Button */
 .stat-help-btn {
@@ -157,7 +160,6 @@ body {
 
 .app-container {
   max-width: 100vw;
-  overflow-x: clip;
 }
 
 /* ========================================
