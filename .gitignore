@@ -1,0 +1,12 @@
+# Vercelデプロイ不要ファイル
+
+# 元データ
+*.xlsx
+*.csv
+*_backup.*
+convert_excel.py
+data.js
+
+# OS
+Thumbs.db
+.DS_Store
