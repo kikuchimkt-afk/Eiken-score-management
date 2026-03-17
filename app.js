@@ -648,27 +648,57 @@
         newRecords.push(record);
       });
 
-      // Check duplicates
-      const existingKeys = new Set(allData.map((d) => makeKey(d)));
-      const unique = newRecords.filter((r) => !existingKeys.has(makeKey(r)));
-      const dupeCount = newRecords.length - unique.length;
+      // Check duplicates and updatable records
+      const existingByKey = {};
+      allData.forEach((d) => { existingByKey[makeKey(d)] = d; });
 
-      if (unique.length === 0) {
-        showToast('すべてのデータが既に存在しています（' + dupeCount + '件の重複）', 'error');
+      const unique = [];      // 完全新規
+      const updatable = [];   // 2次試験結果の更新が必要
+      let skipCount = 0;      // 完全重複（スキップ）
+
+      newRecords.forEach((r) => {
+        const key = makeKey(r);
+        const existing = existingByKey[key];
+        if (!existing) {
+          unique.push(r);
+        } else if (hasNewSecondaryData(r, existing)) {
+          // 2次試験の結果が追加されている → 更新対象
+          updatable.push({ newData: r, existingId: existing.id });
+        } else {
+          skipCount++;
+        }
+      });
+
+      if (unique.length === 0 && updatable.length === 0) {
+        showToast('すべてのデータが既に存在しています（' + skipCount + '件の重複）', 'error');
         importProgress.style.display = 'none';
         return;
       }
 
-      progressText.textContent = unique.length + '件の新規データをインポート中...';
+      const totalWork = unique.length + updatable.length;
+      progressText.textContent = totalWork + '件のデータを処理中...';
 
-      // Import to Firestore
-      await importBatch(unique);
+      // Import new records
+      if (unique.length > 0) {
+        await importBatch(unique);
+      }
+
+      // Update existing records with secondary exam data
+      if (updatable.length > 0) {
+        await updateBatchWithSecondary(updatable);
+      }
 
       importProgress.style.display = 'none';
       csvDropOverlay.classList.remove('active');
 
-      let msg = unique.length + '件のデータをインポートしました！';
-      if (dupeCount > 0) msg += '（' + dupeCount + '件の重複はスキップ）';
+      let msg = '';
+      if (unique.length > 0) msg += unique.length + '件の新規データをインポート';
+      if (updatable.length > 0) {
+        if (msg) msg += '、';
+        msg += updatable.length + '件の2次試験結果を更新';
+      }
+      msg += 'しました！';
+      if (skipCount > 0) msg += '（' + skipCount + '件の重複はスキップ）';
       showToast(msg, 'success');
 
       // Reload data
@@ -683,6 +713,49 @@
 
   function makeKey(d) {
     return [d.name, d.grade, d.session, d.year].join('|');
+  }
+
+  // 2次試験結果フィールド
+  const SECONDARY_FIELDS = [
+    'secondaryResult', 'overallResult', 'bandSecondary',
+    'speakingCSE', 'totalCSE',
+    'speakingCEFR', 'overallCEFR',
+    'speakingReading', 'speakingQA', 'speakingAttitude', 'speakingScore'
+  ];
+
+  function hasNewSecondaryData(newRecord, existing) {
+    return SECONDARY_FIELDS.some((f) => {
+      const newVal = newRecord[f];
+      const oldVal = existing[f];
+      return newVal !== null && newVal !== undefined && (oldVal === null || oldVal === undefined);
+    });
+  }
+
+  async function updateBatchWithSecondary(updates) {
+    const BATCH_SIZE = 400;
+    let done = 0;
+    const total = updates.length;
+
+    for (let i = 0; i < total; i += BATCH_SIZE) {
+      const batch = db.batch();
+      const chunk = updates.slice(i, i + BATCH_SIZE);
+      chunk.forEach(({ newData, existingId }) => {
+        const ref = db.collection(COLLECTION).doc(existingId);
+        // Merge: 既存データに新しいデータを上書き（nullでない値のみ）
+        const updateFields = {};
+        Object.entries(sanitizeRow(newData)).forEach(([key, val]) => {
+          if (val !== null && val !== undefined) {
+            updateFields[key] = val;
+          }
+        });
+        batch.update(ref, updateFields);
+      });
+      await batch.commit();
+      done += chunk.length;
+      const pct = Math.round((done / total) * 100);
+      progressFill.style.width = pct + '%';
+      progressText.textContent = done + ' / ' + total + ' 件更新済み';
+    }
   }
 
   function computeDerived(r) {
